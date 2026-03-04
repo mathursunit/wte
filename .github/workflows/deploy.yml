@@ -1,0 +1,41 @@
+name: Deploy to OCI
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install and Build
+        run: |
+          npm install
+          npm run build
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DIRECT_URL: ${{ secrets.DIRECT_URL }}
+
+      - name: Deploy to OCI Server
+        uses: easingthemes/ssh-deploy@main
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SERVER_SSH_KEY }}
+          ARGS: "-rlgoDzvc -i --delete --exclude 'node_modules' --exclude '.next/cache'"
+          SOURCE: "./"
+          REMOTE_HOST: "68.233.114.111"
+          REMOTE_USER: "ubuntu"
+          TARGET: "/var/www/wte.sunitmathur.com/"
+          SCRIPT_AFTER: |
+            cd /var/www/wte.sunitmathur.com/
+            # Re-install prod dependencies if needed, or just restart PM2
+            npm install --production
+            pm2 restart sunsar-menu || pm2 start npm --name "sunsar-menu" -- start
