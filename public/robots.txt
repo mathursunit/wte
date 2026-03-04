@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Allow: /privacy.html
+Allow: /privacy.htm
+
+Sitemap: https://wte.sunitmathur.com/sitemap.xml
